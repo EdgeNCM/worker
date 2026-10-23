@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NCM-Worker</title>
+  </head>
+  <body>
+    <h1>NCM-Worker <span id="heading"></span></h1>
+    <p>
+      This page comes from a static asset stored at `public/index.html` as configured in
+      `wrangler.jsonc`.
+    </p>
+    <button id="button" type="button">Fetch a random Song</button>
+    <output id="random" for="button"></output>
+    <div><br /><audio id="audio" controls></audio></div>
+    <script>
+      fetch('/inner/version')
+        .then((resp) => resp.json())
+        .then((body) => {
+          const h1 = document.getElementById('heading');
+          h1.textContent = body.data.version;
+        });
+
+      const button = document.getElementById('button');
+      const audio = document.getElementById('audio');
+      const songs = [2058124989, 31654694, 435166265, 3417377293, 1914695652, 2016139765];
+      let index = 0;
+      button.addEventListener('click', () => {
+        fetch('/song/url?id=' + songs[index++ % songs.length])
+          .then((resp) => resp.json())
+          .then((body) => {
+            const data = body.data[0];
+            const random = document.getElementById('random');
+            if (data.url) {
+              random.textContent = `${data.id} - ${data.level}`;
+              audio.src = data.url;
+              audio.play();
+            } else {
+              random.textContent = 'failed to get song url: ' + data.code;
+            }
+          });
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,34 @@
+import { paramError } from '../services/common';
+
+const SongUrlV1: Handler = async (query, request) => {
+	if (!query.id) return paramError();
+
+	const ids = String(query.id).split(',');
+	const data: Record<string, any> = {
+		ids: JSON.stringify(ids),
+		level: query.level || 'exhigh',
+		encodeType: 'flac',
+	};
+
+	if (data.level == 'sky') {
+		data.immerseType = query.immerseType || 'c51';
+	}
+
+	const res = await request('song/enhance/player/url/v1', data, {});
+
+	if (ids.length > 1) {
+		// 根据 ID 排序
+		const body = await res.json();
+		const result = (body as any).data;
+		if (Array.isArray(result)) {
+			result.sort((a, b) => {
+				return ids.indexOf(String(a.id)) - ids.indexOf(String(b.id));
+			});
+		}
+		return new Response(JSON.stringify(body), res);
+	}
+
+	return res;
+};
+
+export default SongUrlV1;
